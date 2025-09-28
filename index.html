@@ -33,8 +33,21 @@
         }
 
         /* Ensure background persists in fullscreen mode */
+        html:fullscreen {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         body:fullscreen {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Fallback approach using JavaScript class */
+        .fullscreen-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+
+        html.fullscreen-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         }
 
         .dashboard {
@@ -487,13 +500,19 @@
             }
         }
 
-        // Hide fullscreen button when in fullscreen mode
+        // Hide fullscreen button when in fullscreen mode and force background
         document.addEventListener('fullscreenchange', () => {
             const btn = document.querySelector('.fullscreen-btn');
             if (document.fullscreenElement) {
                 btn.style.display = 'none';
+                // Force background to persist in fullscreen
+                document.documentElement.classList.add('fullscreen-active');
+                document.body.classList.add('fullscreen-active');
             } else {
                 btn.style.display = 'block';
+                // Remove fullscreen background classes
+                document.documentElement.classList.remove('fullscreen-active');
+                document.body.classList.remove('fullscreen-active');
             }
         });
 
