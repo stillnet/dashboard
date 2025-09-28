@@ -253,9 +253,21 @@
                 font-size: 3rem;
             }
         }
+
+        #build-number {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.15);
+            font-family: monospace;
+            z-index: 1000;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    <div id="build-number">v01</div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 
     <div class="dashboard">
