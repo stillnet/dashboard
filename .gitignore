@@ -1,0 +1,15 @@
+.claude
+
+# SSL certificates (local development)
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
