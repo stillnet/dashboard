@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morning Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .current-time {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .current-date {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .weather-section, .calendar-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .weather-current {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .temperature {
+            font-size: 4rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .weather-description {
+            font-size: 1.3rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        .weather-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .weather-forecast {
+            margin-top: 20px;
+        }
+
+        .forecast-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .calendar-events {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .event-time {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .event-location {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .error {
+            color: #ffcccb;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .auth-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .auth-button:hover {
+            background: #357ae8;
+        }
+
+        .auth-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+
+            .current-time {
+                font-size: 2rem;
+            }
+
+            .temperature {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="current-time" id="current-time"></div>
+            <div class="current-date" id="current-date"></div>
+        </div>
+
+        <div class="weather-section">
+            <h2 class="section-title">🌤️ Weather - Omaha, NE</h2>
+            <div id="weather-content">
+                <div class="loading">Loading weather data...</div>
+            </div>
+        </div>
+
+        <div class="calendar-section">
+            <h2 class="section-title">📅 Today's Schedule</h2>
+            <div id="calendar-content">
+                <iframe
+                    id="calendar-iframe"
+                    src="https://calendar.google.com/calendar/u/0/embed?src=8mtboh1ko0c8d4j5e78j62b4g4@group.calendar.google.com&ctz=America/Chicago&mode=AGENDA&showTitle=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&height=500"
+                    style="border: 0; width: 100%; height: 500px; border-radius: 10px;"
+                    frameborder="0"
+                    scrolling="no"
+                    onerror="handleCalendarError()">
+                </iframe>
+                <div id="calendar-fallback" style="display: none;">
+                    <div class="loading" style="margin-bottom: 15px;">
+                        Calendar authentication required
+                    </div>
+                    <a href="https://calendar.google.com/calendar/u/0?cid=8mtboh1ko0c8d4j5e78j62b4g4@group.calendar.google.com"
+                       target="_blank"
+                       class="auth-button">
+                        Open Calendar in New Tab
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calendar error handling
+        function handleCalendarError() {
+            console.log('Calendar iframe failed to load, showing fallback...');
+            document.getElementById('calendar-iframe').style.display = 'none';
+            document.getElementById('calendar-fallback').style.display = 'block';
+        }
+
+        // Check if calendar loads properly after a delay
+        setTimeout(() => {
+            const iframe = document.getElementById('calendar-iframe');
+            try {
+                // Try to detect if iframe loaded successfully
+                // Note: Due to CORS, we can't actually check iframe content
+                // This is just a backup check in case of obvious failures
+                if (!iframe.contentWindow) {
+                    console.log('Calendar iframe may not have loaded properly');
+                }
+            } catch (e) {
+                console.log('Calendar iframe cross-origin check (expected):', e.message);
+            }
+        }, 3000);
+
+        // Weather Functions
+        async function loadWeatherData() {
+            try {
+                // Get weather for Omaha, NE using Open-Meteo API
+                const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2524&longitude=-95.9980&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,uv_index_max&forecast_days=5&timezone=America/Chicago');
+                const weatherData = await response.json();
+
+                displayWeatherData(weatherData);
+            } catch (error) {
+                console.error('Error loading weather data:', error);
+                document.getElementById('weather-content').innerHTML = '<div class="error">Failed to load weather data</div>';
+            }
+        }
+
+        // Weather code to description mapping
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: 'Clear sky',
+                1: 'Mainly clear',
+                2: 'Partly cloudy',
+                3: 'Overcast',
+                45: 'Foggy',
+                48: 'Rime fog',
+                51: 'Light drizzle',
+                53: 'Moderate drizzle',
+                55: 'Dense drizzle',
+                56: 'Freezing drizzle',
+                57: 'Dense freezing drizzle',
+                61: 'Slight rain',
+                63: 'Moderate rain',
+                65: 'Heavy rain',
+                66: 'Freezing rain',
+                67: 'Heavy freezing rain',
+                71: 'Slight snow',
+                73: 'Moderate snow',
+                75: 'Heavy snow',
+                77: 'Snow grains',
+                80: 'Rain showers',
+                81: 'Moderate rain showers',
+                82: 'Violent rain showers',
+                85: 'Snow showers',
+                86: 'Heavy snow showers',
+                95: 'Thunderstorm',
+                96: 'Thunderstorm with hail',
+                99: 'Thunderstorm with heavy hail'
+            };
+            return weatherCodes[code] || 'Unknown';
+        }
+
+        function displayWeatherData(data) {
+            const current = data.current;
+            const daily = data.daily;
+
+            // Today's detailed forecast (index 0)
+            const todayHigh = Math.round(daily.temperature_2m_max[0]);
+            const todayLow = Math.round(daily.temperature_2m_min[0]);
+            const todayDesc = getWeatherDescription(daily.weather_code[0]);
+            const precipChance = daily.precipitation_probability_max[0] || 0;
+            const windMax = Math.round(daily.wind_speed_10m_max[0]);
+            const uvIndex = Math.round(daily.uv_index_max[0]);
+            const currentTemp = Math.round(current.temperature_2m);
+
+            let weatherHtml = `
+                <div class="weather-current">
+                    <div class="temperature">${todayHigh}°/${todayLow}°F <span style="font-size: 0.6em; opacity: 0.7;">(now ${currentTemp}°)</span></div>
+                    <div class="weather-description">${todayDesc}</div>
+                    <div class="weather-details">
+                        <div class="weather-item">
+                            <div>Rain Chance</div>
+                            <div>${precipChance}%</div>
+                        </div>
+                        <div class="weather-item">
+                            <div>Wind</div>
+                            <div>${windMax} mph</div>
+                        </div>
+                        <div class="weather-item">
+                            <div>UV Index</div>
+                            <div>${uvIndex}</div>
+                        </div>
+                        <div class="weather-item">
+                            <div>Humidity</div>
+                            <div>${current.relative_humidity_2m}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 5-day forecast starting from tomorrow
+            if (daily && daily.temperature_2m_max) {
+                weatherHtml += '<div class="weather-forecast">';
+                for (let i = 1; i < 5; i++) {
+                    const date = new Date(daily.time[i]);
+                    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const high = Math.round(daily.temperature_2m_max[i]);
+                    const low = Math.round(daily.temperature_2m_min[i]);
+                    const forecastDesc = getWeatherDescription(daily.weather_code[i]);
+                    const rainChance = daily.precipitation_probability_max[i] || 0;
+
+                    weatherHtml += `
+                        <div class="forecast-item">
+                            <div>${dayName}</div>
+                            <div>${high}°/${low}°F</div>
+                            <div style="font-size: 0.75rem; opacity: 0.8;">${forecastDesc}</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7;">${rainChance}% rain</div>
+                        </div>
+                    `;
+                }
+                weatherHtml += '</div>';
+            }
+
+            document.getElementById('weather-content').innerHTML = weatherHtml;
+        }
+
+        // Time and Date Functions
+        function updateTimeAndDate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'});
+            const dateString = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', async function() {
+            updateTimeAndDate();
+            setInterval(updateTimeAndDate, 1000);
+
+            loadWeatherData();
+            setInterval(loadWeatherData, 30 * 60 * 1000); // Refresh every 30 minutes
+
+            // No calendar initialization needed - using embedded iframe
+        });
+    </script>
+</body>
+</html>
