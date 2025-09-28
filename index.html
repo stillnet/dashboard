@@ -403,6 +403,33 @@
             document.getElementById('current-date').textContent = dateString;
         }
 
+        // Wake Lock functionality to keep screen awake
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake lock is active - screen will stay awake');
+
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake lock was released');
+                    });
+                } else {
+                    console.log('Wake Lock API not supported');
+                }
+            } catch (err) {
+                console.error('Failed to request wake lock:', err);
+            }
+        }
+
+        // Re-request wake lock when page becomes visible again
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+
         // Initialize everything
         document.addEventListener('DOMContentLoaded', async function() {
             updateTimeAndDate();
@@ -410,6 +437,9 @@
 
             loadWeatherData();
             setInterval(loadWeatherData, 5 * 60 * 1000); // Refresh every 5 minutes
+
+            // Request wake lock to keep screen awake
+            await requestWakeLock();
 
             // No calendar initialization needed - using embedded iframe
         });
