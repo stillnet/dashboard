@@ -329,7 +329,7 @@
         async function loadWeatherData() {
             try {
                 // Get weather for Omaha, NE using Open-Meteo API
-                const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2524&longitude=-95.9980&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,uv_index_max&forecast_days=5&timezone=America/Chicago');
+                const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2524&longitude=-95.9980&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,uv_index_max&forecast_days=7&timezone=America/Chicago');
                 const weatherData = await response.json();
 
                 displayWeatherData(weatherData);
@@ -418,12 +418,20 @@
                 </div>
             `;
 
-            // 5-day forecast starting from tomorrow
+            // Forecast starting from tomorrow (skip today)
             if (daily && daily.temperature_2m_max) {
                 weatherHtml += '<div class="weather-forecast">';
-                for (let i = 1; i < 5; i++) {
+                const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+
+                for (let i = 1; i < daily.time.length; i++) {
                     const date = new Date(daily.time[i]);
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+
+                    // Double-check: skip if somehow this day matches today
+                    if (dayName === today) {
+                        continue;
+                    }
+
                     const high = Math.round(daily.temperature_2m_max[i]);
                     const low = Math.round(daily.temperature_2m_min[i]);
                     const forecastDesc = getWeatherDescription(daily.weather_code[i]);
