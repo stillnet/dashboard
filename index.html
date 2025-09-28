@@ -137,6 +137,18 @@
         .weather-current {
             text-align: center;
             margin-bottom: 25px;
+            position: relative;
+        }
+
+        .today-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: -5px;
+            text-align: left;
+            position: absolute;
+            top: -10px;
+            left: 0;
         }
 
         .temperature {
@@ -267,7 +279,7 @@
     </style>
 </head>
 <body>
-    <div id="build-number">v01</div>
+    <div id="build-number">v02</div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 
     <div class="dashboard">
@@ -425,6 +437,7 @@
 
             let weatherHtml = `
                 <div class="weather-current">
+                    <div class="today-label">Today</div>
                     <div class="temperature">${todayHigh}°/${todayLow}°F</div>
                     <div class="weather-description">${todayDesc}</div>
                 </div>
