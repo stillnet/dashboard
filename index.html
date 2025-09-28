@@ -418,19 +418,15 @@
                 </div>
             `;
 
-            // Forecast starting from tomorrow (skip today)
+            // Forecast starting from tomorrow (index 1 onwards)
             if (daily && daily.temperature_2m_max) {
                 weatherHtml += '<div class="weather-forecast">';
-                const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
 
                 for (let i = 1; i < daily.time.length; i++) {
-                    const date = new Date(daily.time[i]);
+                    // Parse date in local time to avoid UTC timezone issues
+                    const [year, month, day] = daily.time[i].split('-');
+                    const date = new Date(year, month - 1, day);  // Month is 0-indexed
                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-
-                    // Double-check: skip if somehow this day matches today
-                    if (dayName === today) {
-                        continue;
-                    }
 
                     const high = Math.round(daily.temperature_2m_max[i]);
                     const low = Math.round(daily.temperature_2m_min[i]);
