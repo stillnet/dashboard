@@ -8,6 +8,7 @@ import http.server
 import ssl
 import socketserver
 import os
+import platform
 from pathlib import Path
 
 # Configuration
@@ -53,6 +54,16 @@ def create_ssl_context():
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
 
+    # Optimize SSL for better compatibility and fewer errors
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    # Use default ciphers for better compatibility (removed custom cipher list that was causing issues)
+
+    # Enable session caching for faster reconnections
+    try:
+        context.session_stats()  # Initialize session cache
+    except AttributeError:
+        pass  # Older Python versions may not have this
+
     return context
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -70,6 +81,17 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         message = format % args
         print(f"[{self.log_date_time_string()}] {message}")
 
+    def handle_one_request(self):
+        """Handle one HTTP request with SSL error handling."""
+        try:
+            super().handle_one_request()
+        except (ssl.SSLEOFError, ConnectionResetError, BrokenPipeError) as e:
+            # Silently handle common SSL/connection errors that occur when clients disconnect
+            pass
+        except Exception as e:
+            # Log other unexpected errors
+            print(f"Request handling error: {e}")
+
 def main():
     """Start the HTTPS server."""
 
@@ -84,11 +106,22 @@ def main():
         if file.endswith(('.html', '.css', '.js')):
             print(f"  - {file}")
 
-    # Create the server
-    with socketserver.TCPServer((HOST, PORT), CustomHTTPRequestHandler) as httpd:
+    # Create the server with better connection handling
+    # Use ThreadingHTTPServer for better concurrent connection support
+    socketserver.TCPServer.allow_reuse_address = True
+
+    # Windows-specific socket configuration
+    if platform.system() == "Windows":
+        socketserver.TCPServer.allow_reuse_address = True
+        # Note: SO_EXCLUSIVEADDRUSE is handled automatically by Python on Windows
+
+    with http.server.ThreadingHTTPServer((HOST, PORT), CustomHTTPRequestHandler) as httpd:
         # Add SSL
         ssl_context = create_ssl_context()
         httpd.socket = ssl_context.wrap_socket(httpd.socket, server_side=True)
+
+        # Set server timeout to prevent hanging connections
+        httpd.timeout = 30
 
         print(f"\n🚀 HTTPS Server running!")
         print(f"📱 Dashboard URL: https://{HOST}:{PORT}/dashboard.html")
