@@ -279,7 +279,7 @@
     </style>
 </head>
 <body>
-    <div id="build-number">v02</div>
+    <div id="build-number">v03</div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 
     <div class="dashboard">
@@ -529,20 +529,35 @@
             }
         }
 
+        // Function to check if we should hide the fullscreen button
+        function updateFullscreenButtonVisibility() {
+            const btn = document.querySelector('.fullscreen-btn');
+
+            // Hide button if in fullscreen mode OR if running as PWA in standalone mode
+            const isFullscreen = !!document.fullscreenElement;
+            const isPWAStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                                  window.navigator.standalone === true;
+
+            if (isFullscreen || isPWAStandalone) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'block';
+            }
+        }
+
         // Hide fullscreen button when in fullscreen mode and force background
         document.addEventListener('fullscreenchange', () => {
             const btn = document.querySelector('.fullscreen-btn');
             if (document.fullscreenElement) {
-                btn.style.display = 'none';
                 // Force background to persist in fullscreen
                 document.documentElement.classList.add('fullscreen-active');
                 document.body.classList.add('fullscreen-active');
             } else {
-                btn.style.display = 'block';
                 // Remove fullscreen background classes
                 document.documentElement.classList.remove('fullscreen-active');
                 document.body.classList.remove('fullscreen-active');
             }
+            updateFullscreenButtonVisibility();
         });
 
         // Initialize everything
@@ -555,6 +570,9 @@
 
             // Request wake lock to keep screen awake
             await requestWakeLock();
+
+            // Check initial fullscreen button visibility (for PWA standalone mode)
+            updateFullscreenButtonVisibility();
 
             // No calendar initialization needed - using embedded iframe
         });
