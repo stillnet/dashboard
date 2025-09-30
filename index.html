@@ -266,10 +266,58 @@
             }
         }
 
-        #build-number {
+        .weather-status-indicator {
             position: fixed;
             top: 10px;
             left: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .weather-status-indicator.empty {
+            background: transparent;
+        }
+
+        .weather-status-indicator.success {
+            background: rgba(144, 238, 144, 0.7);
+            border-color: rgba(144, 238, 144, 0.9);
+        }
+
+        .weather-status-indicator.error {
+            background: #FF6B6B;
+            border-color: #FF4757;
+        }
+
+        .weather-status-indicator.loading {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.7);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        #build-number {
+            position: fixed;
+            top: 7px;
+            left: 30px;
             font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.15);
             font-family: monospace;
@@ -279,7 +327,8 @@
     </style>
 </head>
 <body>
-    <div id="build-number">v03</div>
+    <div id="build-number">v04</div>
+    <div class="weather-status-indicator" id="weather-status-indicator" onclick="showWeatherStatus()"></div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
 
     <div class="dashboard">
@@ -327,6 +376,42 @@
     </div>
 
     <script>
+        // Weather status tracking
+        let weatherStatus = 'empty'; // 'empty', 'loading', 'success', 'error'
+        let lastWeatherFetch = null;
+        let cachedWeatherData = null;
+
+        // Update weather status indicator
+        function updateWeatherStatusIndicator() {
+            const indicator = document.getElementById('weather-status-indicator');
+            if (indicator) {
+                indicator.className = `weather-status-indicator ${weatherStatus}`;
+            }
+        }
+
+        // Show weather status popup
+        function showWeatherStatus() {
+            let message;
+            if (weatherStatus === 'empty') {
+                message = 'No weather fetch attempted yet';
+            } else if (weatherStatus === 'loading') {
+                message = 'Weather fetch in progress...';
+            } else if (lastWeatherFetch) {
+                const timestamp = lastWeatherFetch.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) + ' at ' + lastWeatherFetch.toLocaleTimeString('en-US');
+
+                const statusText = weatherStatus === 'success' ? 'succeeded' : 'failed';
+                message = `Last weather fetch at ${timestamp} ${statusText}`;
+            } else {
+                message = 'No weather fetch information available';
+            }
+            alert(message);
+        }
+
         // Calendar error handling
         function handleCalendarError() {
             console.log('Calendar iframe failed to load, showing fallback...');
@@ -351,15 +436,32 @@
 
         // Weather Functions
         async function loadWeatherData() {
+            // Set loading status
+            weatherStatus = 'loading';
+            lastWeatherFetch = new Date();
+            updateWeatherStatusIndicator();
+
             try {
                 // Get weather for Omaha, NE using Open-Meteo API
                 const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=41.2524&longitude=-95.9980&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,uv_index_max&forecast_days=7&timezone=America/Chicago');
                 const weatherData = await response.json();
 
+                // Success - cache the data and update status
+                cachedWeatherData = weatherData;
+                weatherStatus = 'success';
+                updateWeatherStatusIndicator();
                 displayWeatherData(weatherData);
             } catch (error) {
                 console.error('Error loading weather data:', error);
-                document.getElementById('weather-content').innerHTML = '<div class="error">Failed to load weather data</div>';
+                weatherStatus = 'error';
+                updateWeatherStatusIndicator();
+
+                // If we have cached data, display it instead of error message
+                if (cachedWeatherData) {
+                    displayWeatherData(cachedWeatherData);
+                } else {
+                    document.getElementById('weather-content').innerHTML = '<div class="error">Failed to load weather data</div>';
+                }
             }
         }
 
@@ -564,6 +666,9 @@
         document.addEventListener('DOMContentLoaded', async function() {
             updateTimeAndDate();
             setInterval(updateTimeAndDate, 1000);
+
+            // Initialize weather status indicator
+            updateWeatherStatusIndicator();
 
             loadWeatherData();
             setInterval(loadWeatherData, 5 * 60 * 1000); // Refresh every 5 minutes
