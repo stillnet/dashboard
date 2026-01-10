@@ -75,7 +75,7 @@
         }
 
         .current-time {
-            font-size: 1.8rem;
+            font-size: 4rem;
             font-weight: 300;
         }
 
@@ -85,7 +85,7 @@
         }
 
         .current-temp {
-            font-size: 1.8rem;
+            font-size: 2.5rem;
             font-weight: 300;
         }
 
@@ -324,12 +324,43 @@
             z-index: 1000;
             pointer-events: none;
         }
+
+        /* Night mode styles */
+        body.night-mode {
+            background: #000;
+        }
+
+        body.night-mode .dashboard,
+        body.night-mode .fullscreen-btn,
+        body.night-mode #build-number,
+        body.night-mode .weather-status-indicator {
+            display: none;
+        }
+
+        body.night-mode .night-time-display {
+            display: flex;
+        }
+
+        .night-time-display {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            font-size: 21vw;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.6);
+        }
     </style>
 </head>
 <body>
-    <div id="build-number">v04</div>
+    <div id="build-number">v06</div>
     <div class="weather-status-indicator" id="weather-status-indicator" onclick="showWeatherStatus()"></div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    <div class="night-time-display" id="night-time"></div>
 
     <div class="dashboard">
         <div class="weather-section">
@@ -577,6 +608,28 @@
             }
         }
 
+        // Night mode functions
+        function isNightModeTime() {
+            const hour = new Date().getHours();
+            return hour >= 0 && hour < 5;
+        }
+
+        function isNightModeForced() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('night') === '1';
+        }
+
+        function updateNightMode() {
+            const shouldBeNight = isNightModeForced() || isNightModeTime();
+            document.body.classList.toggle('night-mode', shouldBeNight);
+        }
+
+        function updateNightTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'});
+            document.getElementById('night-time').textContent = timeString;
+        }
+
         // Time and Date Functions
         function updateTimeAndDate() {
             const now = new Date();
@@ -665,7 +718,13 @@
         // Initialize everything
         document.addEventListener('DOMContentLoaded', async function() {
             updateTimeAndDate();
-            setInterval(updateTimeAndDate, 1000);
+            updateNightMode();
+            updateNightTime();
+            setInterval(() => {
+                updateTimeAndDate();
+                updateNightMode();
+                updateNightTime();
+            }, 1000);
 
             // Initialize weather status indicator
             updateWeatherStatusIndicator();
