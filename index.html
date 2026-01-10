@@ -330,6 +330,16 @@
             background: #000;
         }
 
+        body.night-mode:fullscreen,
+        body.night-mode.fullscreen-active {
+            background: #000 !important;
+        }
+
+        html:fullscreen body.night-mode,
+        html.fullscreen-active body.night-mode {
+            background: #000 !important;
+        }
+
         body.night-mode .dashboard,
         body.night-mode .fullscreen-btn,
         body.night-mode #build-number,
@@ -357,7 +367,7 @@
     </style>
 </head>
 <body>
-    <div id="build-number">v06</div>
+    <div id="build-number">v07</div>
     <div class="weather-status-indicator" id="weather-status-indicator" onclick="showWeatherStatus()"></div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
     <div class="night-time-display" id="night-time"></div>
