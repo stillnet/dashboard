@@ -2,6 +2,19 @@
 
 A simple morning dashboard displaying current time, weather for Omaha NE, and Google Calendar events.
 
+## Features
+
+### Night Mode
+Between midnight and 5am, the dashboard automatically switches to night mode: a dark screen with only the time displayed in large centered text. This makes it easy to check the time if you wake up at night without being blinded by the bright display.
+
+To test night mode at any time, add `?night=1` to the URL:
+```
+https://localhost:8443/index.html?night=1
+```
+
+### Calendar Auto-Refresh
+The Google Calendar iframe automatically refreshes once daily at 1am. This happens during night mode, so fresh calendar data is ready when you wake up.
+
 ## Development
 
 Start the local HTTPS server:
