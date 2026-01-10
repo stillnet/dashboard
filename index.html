@@ -367,7 +367,7 @@
     </style>
 </head>
 <body>
-    <div id="build-number">v07</div>
+    <div id="build-number">v08</div>
     <div class="weather-status-indicator" id="weather-status-indicator" onclick="showWeatherStatus()"></div>
     <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
     <div class="night-time-display" id="night-time"></div>
@@ -618,6 +618,25 @@
             }
         }
 
+        // Calendar refresh (once daily at 1am)
+        let lastCalendarRefreshDate = null;
+
+        function checkCalendarRefresh() {
+            const now = new Date();
+            const hour = now.getHours();
+            const today = now.toDateString();
+
+            // Refresh at 1am if we haven't already today
+            if (hour === 1 && lastCalendarRefreshDate !== today) {
+                const iframe = document.getElementById('calendar-iframe');
+                if (iframe) {
+                    iframe.src = iframe.src;
+                    console.log('Calendar refreshed at 1am');
+                }
+                lastCalendarRefreshDate = today;
+            }
+        }
+
         // Night mode functions
         function isNightModeTime() {
             const hour = new Date().getHours();
@@ -734,6 +753,7 @@
                 updateTimeAndDate();
                 updateNightMode();
                 updateNightTime();
+                checkCalendarRefresh();
             }, 1000);
 
             // Initialize weather status indicator
